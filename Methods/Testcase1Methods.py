@@ -1,5 +1,6 @@
 from Utilities.Baseclass import Baseclass
 from datetime import datetime, timedelta
+import sys
 
 class TestCase1(Baseclass):
     def __init__(self,auto_scaling_group_name):
@@ -11,8 +12,12 @@ class TestCase1(Baseclass):
         self.auto_scaling_group_name = auto_scaling_group_name
 
     def get_asg_instances(self):
-        self.asg_response = self.ASGconnection().describe_auto_scaling_groups(
-            AutoScalingGroupNames=[self.auto_scaling_group_name], MaxRecords=1)
+        self.asg_response = self.ASGconnection().describe_auto_scaling_groups(AutoScalingGroupNames=[self.auto_scaling_group_name], MaxRecords=1)
+        if not self.asg_response['AutoScalingGroups']:
+            print('Error: No Auto Scaling Group found with the given name, Exiting TestCaseA')
+            exit(1)
+
+
         self.instances = self.asg_response['AutoScalingGroups'][0]['Instances']
         self.desiredcapacity = self.asg_response['AutoScalingGroups'][0]['DesiredCapacity']
 

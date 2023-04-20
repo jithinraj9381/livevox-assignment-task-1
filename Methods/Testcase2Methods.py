@@ -1,5 +1,6 @@
 from Utilities.Baseclass import Baseclass
 from datetime import datetime, timezone
+import sys
 
 
 class TestCase2(Baseclass):
@@ -8,7 +9,11 @@ class TestCase2(Baseclass):
 
 
     def get_ec2_instances(self):
-        self.asg_activity_response = self.ASGconnection().describe_scaling_activities(AutoScalingGroupName=self.auto_scaling_group_name, MaxRecords=100)['Activities']
+        try:
+            self.asg_activity_response = self.ASGconnection().describe_scaling_activities(AutoScalingGroupName=self.auto_scaling_group_name, MaxRecords=100)['Activities']
+        except Exception as e:
+            print("\nAuto Scaling Group is invalid, exiting TestcaseB")
+            sys.exit()
 
         current_date = datetime.now(timezone.utc).date()
 
@@ -46,7 +51,11 @@ class TestCase2(Baseclass):
         print(f"Number of Instances Launched Today is: {launched_inst_count}")
 
     def get_scheduled_action(self):
-        self.asg_schedule_response = self.ASGconnection().describe_scheduled_actions(AutoScalingGroupName=self.auto_scaling_group_name)
+        try:
+            self.asg_schedule_response = self.ASGconnection().describe_scheduled_actions(AutoScalingGroupName=self.auto_scaling_group_name)
+        except Exception as e:
+            print("\nAuto Scaling Group is invalid, exiting TestcaseB")
+            sys.exit()
 
         scheduled_actions = self.asg_schedule_response['ScheduledUpdateGroupActions']
 
