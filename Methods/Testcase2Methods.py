@@ -12,7 +12,7 @@ class TestCase2(Baseclass):
         try:
             self.asg_activity_response = self.ASGconnection().describe_scaling_activities(AutoScalingGroupName=self.auto_scaling_group_name, MaxRecords=100)['Activities']
         except Exception as e:
-            print("\nAuto Scaling Group is invalid, exiting TestcaseB")
+            print("\nError occured while login or ASG is invalid")
             sys.exit()
 
         current_date = datetime.now(timezone.utc).date()
@@ -54,7 +54,7 @@ class TestCase2(Baseclass):
         try:
             self.asg_schedule_response = self.ASGconnection().describe_scheduled_actions(AutoScalingGroupName=self.auto_scaling_group_name)
         except Exception as e:
-            print("\nAuto Scaling Group is invalid, exiting TestcaseB")
+            print("\nError occured while login or ASG is invalid")
             sys.exit()
 
         scheduled_actions = self.asg_schedule_response['ScheduledUpdateGroupActions']

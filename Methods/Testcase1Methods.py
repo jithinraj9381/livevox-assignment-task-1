@@ -12,10 +12,14 @@ class TestCase1(Baseclass):
         self.auto_scaling_group_name = auto_scaling_group_name
 
     def get_asg_instances(self):
-        self.asg_response = self.ASGconnection().describe_auto_scaling_groups(AutoScalingGroupNames=[self.auto_scaling_group_name], MaxRecords=1)
-        if not self.asg_response['AutoScalingGroups']:
-            print('Error: No Auto Scaling Group found with the given name, Exiting TestCaseA')
-            exit(1)
+        try:
+            self.asg_response = self.ASGconnection().describe_auto_scaling_groups(AutoScalingGroupNames=[self.auto_scaling_group_name], MaxRecords=1)
+            if not self.asg_response['AutoScalingGroups']:
+                print('Error: No Auto Scaling Group found with the given name, Exiting TestCaseA')
+                exit(1)
+        except Exception as e:
+            print("\nError occured while login or ASG is invalid")
+            sys.exit()
 
 
         self.instances = self.asg_response['AutoScalingGroups'][0]['Instances']
