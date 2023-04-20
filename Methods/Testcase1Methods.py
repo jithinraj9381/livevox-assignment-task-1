@@ -21,7 +21,6 @@ class TestCase1(Baseclass):
             print("\nError occured while login or ASG is invalid")
             sys.exit()
 
-
         self.instances = self.asg_response['AutoScalingGroups'][0]['Instances']
         self.desiredcapacity = self.asg_response['AutoScalingGroups'][0]['DesiredCapacity']
 
@@ -40,16 +39,21 @@ class TestCase1(Baseclass):
     def validate_az(self):
         self.get_asg_instances()
         # Get AZs
-        AZs = {instance['AvailabilityZone'] for instance in self.instances}
+        AZs = []
+
+        for instance in self.instances:
+            # Get the availability zone of each instance
+            az = instance['AvailabilityZone']
+            AZs.append(az)
 
         # Verify AZs of instances
         if len(AZs) > 1:
             # Check if all the instances have same AZs
-            if len(AZs) == 1:
-                print(f"\nAll instances have the same AZ {AZs}")
-                assert False, "Instances are not distributed across multiple AZs"
+
+            if all(x == AZs[0] for x in AZs):
+                print(f"\nFail : Instances are not distributed across multiple AZs, All the instances have the same AZ {AZs}")
             else:
-                print(f"\nInstances are distributed across multiple AZ {AZs}")
+                print(f"\nPass : Instances are distributed across multiple AZ {AZs}")
         else:
             print(f"\nAuto Scaling group has only one instance running and AZ is {AZs}")
 
@@ -60,26 +64,59 @@ class TestCase1(Baseclass):
         if len(self.instance_ids) < 2:
             print("\nASG has Launched only 1 Instance, hence cannot compare image ID , security group ID and VPC ID")
         else:
-            image_ids = {instance['ImageId'] for reservation in self.ec2_response['Reservations'] for instance in reservation['Instances']}
-            sg_ids = {sg['GroupId'] for reservation in self.ec2_response['Reservations'] for instance in reservation['Instances'] for sg in instance['SecurityGroups']}
-            vpc_ids = {instance['VpcId'] for reservation in self.ec2_response['Reservations'] for instance in reservation['Instances']}
+            image_ids = []
+            sg_ids = []
+            vpc_ids = []
 
-            # Check if all the image IDs in the list are the same
-            print(f"All instances have the same image ID") if len(image_ids) == 1 else print(f"Not all instances have the same image ID")
+            for reservation in self.ec2_response['Reservations']:
+                for instance in reservation['Instances']:
+                    instance_id = instance['InstanceId']
 
-            # Check if all the Security Group id in the list are the same
-            print(f"All instances have the same sg ID") if len(sg_ids) == 1 else print(f"Not all instances have the same sg ID")
+                    # Fetch Image IDs
+                    image_id = instance['ImageId']
+                    image_ids.append(image_id)
+                    print(f"\nInstance {instance_id} has image ID {image_id}")
 
-            # Check if all the VPC ID in the list are the same
-            print(f"All instances have the same vpc ID") if len(vpc_ids) == 1 else print(f"Not all instances have the same vpc ID")
+                    # Check if all the image IDs in the list are the same
+                    if all(x == image_ids[0] for x in image_ids):
+                        print(f"All instances have the same image ID")
+                    else:
+                        print(f"Not all instances have the same image ID")
+
+                    # Fetch Security Group IDs
+                    sg_id = [sg['GroupId'] for sg in instance['SecurityGroups']]
+                    sg_ids.append(sg_id)
+                    print(f"\nInstance {instance_id} has Security Group ID {sg_ids}")
+
+                    # Check if all the Security Group id in the list are the same
+                    if all(x == sg_ids[0] for x in sg_ids):
+                        print(f"All instances have the same sg ID")
+                    else:
+                        print(f"Not all instances have the same sg ID")
+
+                    # Fetch VPC ID
+                    vpc_id = instance['VpcId']
+                    vpc_ids.append(vpc_id)
+
+                    # Print the instance ID and image ID
+                    print(f"\nInstance {instance_id} has vpc ID {vpc_id}")
+
+                    # Check if all the VPC ID in the list are the same
+                    if all(x == vpc_ids[0] for x in vpc_ids):
+                        print(f"All instances have the same vpc ID")
+                    else:
+                        print(f"Not all instances have the same vpc ID")
 
     def uptime_of_instances(self):
         self.get_asg_instances()
         self.get_ec2_instances()
 
-        instances_data = [{'InstanceId': instance['InstanceId'], 'Launchtime': instance['LaunchTime']}
-                          for reservation in self.ec2_response['Reservations']
-                          for instance in reservation['Instances']]
+        instances_data = []
+        for reservation in self.ec2_response['Reservations']:
+            for instance in reservation['Instances']:
+                _instance_id = instance['InstanceId']
+                _launch_time = instance['LaunchTime']
+                instances_data.append({'InstanceId': _instance_id, 'Launchtime': _launch_time})
 
         max_uptime_instance = {'InstanceId': None, 'Uptime': timedelta(0)}
 

@@ -18,15 +18,20 @@ class TestCase2(Baseclass):
         current_date = datetime.now(timezone.utc).date()
 
         # Filter EC2 Instances Launched/Terminated by ASG
+        ec2_instances = [instance for instance in self.asg_activity_response if
+                         instance['EndTime'].date() == current_date]
+
+        # Get the list of instance IDs and corresponding start and end times
         self.instance_data = []
-        for instance in self.asg_activity_response:
-            if instance['EndTime'].date() == current_date and ("Terminating EC2 instance" in instance['Description'] or "Launching a new EC2 instance" in instance['Description']):
+        for instance in ec2_instances:
+            if "Terminating EC2 instance" in instance['Description'] or "Launching a new EC2 instance" in instance['Description']:
                 instance_description = instance['Description']
                 instance_id = instance['Description'].split()[-1]
                 start_time = instance['StartTime']
                 end_time = instance['EndTime']
                 self.instance_data.append(
-                    {'Description': instance_description, 'InstanceId': instance_id, 'StartTime': start_time, 'EndTime': end_time})
+                    {'Description': instance_description, 'InstanceId': instance_id, 'StartTime': start_time,
+                     'EndTime': end_time})
 
     def terminated_instances(self):
         self.get_ec2_instances()
